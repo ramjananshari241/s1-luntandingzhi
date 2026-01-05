@@ -30,7 +30,7 @@ export const EncryptedCallout = ({ block, children }: { block: any; children: an
       localStorage.setItem(`unlocked-${block.id}`, 'true');
     } else {
       setError(true);
-      // 触发震动反馈（如果设备支持）
+      // 触发震动反馈
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
          navigator.vibrate(200);
       }
@@ -62,22 +62,20 @@ export const EncryptedCallout = ({ block, children }: { block: any; children: an
     );
   }
 
-  // --- 状态 B: 未解锁 (UI 大升级) ---
+  // --- 状态 B: 未解锁 (已移除图标) ---
   return (
     <div className="relative my-8 overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#181818] shadow-2xl">
       
-      {/* 🌟 背景装饰光斑 (增加时尚感) */}
+      {/* 🌟 背景装饰光斑 */}
       <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 p-8 flex flex-col items-center justify-center text-center select-none">
+      {/* 增加 py-12 让上下留白更多，弥补删除图标后的空缺，显得更高级 */}
+      <div className="relative z-10 py-12 px-8 flex flex-col items-center justify-center text-center select-none">
         
-        {/* 🔐 图标：增加浮动动画 */}
-        <div className="text-6xl mb-4 animate-[bounce_3s_infinite] filter drop-shadow-lg">
-          🔐
-        </div>
+        {/* ❌ 图标代码已删除 */}
 
-        <h3 className="font-extrabold text-2xl mb-2 bg-clip-text text-transparent bg-gradient-to-r from-neutral-800 to-neutral-500 dark:from-white dark:to-neutral-400">
+        <h3 className="font-extrabold text-2xl mb-3 bg-clip-text text-transparent bg-gradient-to-r from-neutral-800 to-neutral-500 dark:from-white dark:to-neutral-400">
           受保护的内容
         </h3>
         
@@ -86,7 +84,7 @@ export const EncryptedCallout = ({ block, children }: { block: any; children: an
         </p>
         
         <div className="w-full max-w-sm flex flex-col sm:flex-row gap-4 items-stretch">
-          {/* ⌨️ 输入框：增加聚焦光晕和质感 */}
+          {/* ⌨️ 输入框 */}
           <input 
             type="password" 
             placeholder="请输入密码..."
@@ -109,7 +107,7 @@ export const EncryptedCallout = ({ block, children }: { block: any; children: an
             onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
           />
 
-          {/* 🚀 3D 立体按钮 (重点修改) */}
+          {/* 🚀 3D 立体按钮 */}
           <button 
             onClick={handleUnlock}
             className={`
@@ -122,7 +120,6 @@ export const EncryptedCallout = ({ block, children }: { block: any; children: an
             `}
           >
             <span>解锁</span>
-            {/* 箭头图标：Group Hover 时移动 */}
             <svg 
               className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
               fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -135,11 +132,3 @@ export const EncryptedCallout = ({ block, children }: { block: any; children: an
         {/* 错误提示 */}
         <div className={`
           mt-4 text-sm font-medium text-red-500 flex items-center gap-2 transition-all duration-300
-          ${error ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none h-0'}
-        `}>
-          <span>🚫 密码错误，请重试</span>
-        </div>
-      </div>
-    </div>
-  );
-};
