@@ -1,44 +1,78 @@
 import { classNames } from '@/src/lib/util'
 import { BlogStats } from '@/src/types/blog'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { WidgetContainer } from './WidgetContainer'
 
 // 硬编码的商家编号
 const SHOP_CODE = "PRO-001A"
 
 export const StatsWidget = ({ data }: { data: BlogStats }) => {
-  // 控制弹窗显示的状态
   const [showModal, setShowModal] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+
+  // 复制功能
+  const handleCopy = () => {
+    navigator.clipboard.writeText(SHOP_CODE)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
+  // 禁止背景滚动
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => { document.body.style.overflow = 'unset' }
+  }, [showModal])
 
   return (
     <React.StrictMode>
       <WidgetContainer>
-        {/* ================= 弹窗 UI (Modal) ================= */}
+        
+        {/* ================= 优雅的毛玻璃弹窗 (Modal) ================= */}
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-            {/* 黑色半透明遮罩 (点击背景关闭) */}
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 animate-fade-in">
+            {/* 1. 全屏遮罩：黑色半透明 + 强毛玻璃 */}
             <div 
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+              className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity" 
               onClick={() => setShowModal(false)}
             ></div>
             
-            {/* 弹窗主体 */}
-            <div className="relative z-10 w-full max-w-sm transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-800 p-6 text-left align-middle shadow-2xl transition-all border border-neutral-200 dark:border-neutral-700">
-              <h3 className="text-lg font-bold leading-6 text-gray-900 dark:text-white text-center mb-2">
-                当前商家编号
-              </h3>
+            {/* 2. 弹窗主体：悬浮卡片 */}
+            <div className="relative z-10 w-full max-w-sm transform overflow-hidden rounded-2xl bg-white/90 dark:bg-[#1a1a1a]/90 p-8 text-center shadow-2xl transition-all border border-white/20 dark:border-white/10 backdrop-blur-xl">
               
-              {/* 编号显示区域 */}
-              <div className="my-6 p-4 bg-neutral-100 dark:bg-neutral-900 rounded-xl text-center border-2 border-dashed border-neutral-300 dark:border-neutral-600">
-                <span className="text-3xl font-mono font-black text-blue-600 dark:text-blue-400 select-all">
-                  {SHOP_CODE}
-                </span>
+              {/* 图标装饰 */}
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <span className="text-2xl">🏷️</span>
               </div>
 
-              {/* 关闭按钮 */}
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                当前商家编号
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                请复制下方编号以进行下一步操作
+              </p>
+              
+              {/* 编号显示区域 (点击复制) */}
+              <div 
+                onClick={handleCopy}
+                className="group relative cursor-pointer my-6 p-4 bg-gray-50 dark:bg-black/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
+              >
+                <span className="text-3xl font-mono font-black text-gray-800 dark:text-gray-100 tracking-wider">
+                  {SHOP_CODE}
+                </span>
+                {/* 复制提示气泡 */}
+                <div className="absolute -top-3 right-4 bg-blue-600 text-white text-xs px-2 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isCopied ? '已复制! ✅' : '点击复制'}
+                </div>
+              </div>
+
+              {/* 关闭按钮 (简约风) */}
               <button
                 type="button"
-                className="inline-flex w-full justify-center rounded-lg border border-transparent bg-neutral-900 dark:bg-white px-4 py-2.5 text-sm font-medium text-white dark:text-black hover:bg-neutral-700 dark:hover:bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
+                className="w-full justify-center rounded-xl bg-gray-900 dark:bg-white px-4 py-3 text-sm font-bold text-white dark:text-black hover:opacity-90 transition-opacity"
                 onClick={() => setShowModal(false)}
               >
                 关闭
@@ -47,49 +81,47 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
           </div>
         )}
 
-        {/* ================= 组件主界面 ================= */}
-        <div className="flex flex-col h-full justify-between">
+        {/* ================= 组件主界面 (修复布局) ================= */}
+        <div className="flex flex-col h-full p-6 justify-between">
           
-          {/* 上半部分：提示标题 + 动效手指 */}
-          <div className="flex-1 flex flex-col items-center justify-center py-6 space-y-2">
+          {/* 上半部分：视觉引导 */}
+          <div className="flex-1 flex flex-col items-center justify-center space-y-3 min-h-[100px]">
              <h2 className="text-lg font-bold text-neutral-800 dark:text-neutral-100 tracking-wide">
                查看商家编号
              </h2>
-             {/* 动效手指：使用 animate-bounce 实现上下跳动 */}
+             {/* 动效手指 */}
              <div className="text-4xl animate-bounce pt-2 cursor-default select-none filter drop-shadow-md">
                👇
              </div>
           </div>
 
-          {/* 下半部分：双按钮堆叠区域 */}
-          <div
-            className={classNames(
-              'w-full p-3.5',
-              'bg-neutral-50 dark:bg-neutral-900/50', // 稍微淡一点的背景区分
-              'border-t border-neutral-100 dark:border-neutral-800' // 顶部分割线
-            )}
-          >
-            <div className="flex flex-col gap-3"> {/* gap-3 控制两个按钮之间的间距 */}
+          {/* 下半部分：立体按钮组 */}
+          <div className="flex flex-col gap-4 w-full mt-4"> 
               
-              {/* 按钮 1：查看编号 (蓝色系，以示区分) */}
+              {/* 按钮 1：查看编号 (白灰渐变 + 3D立体) */}
               <button 
                 onClick={() => setShowModal(true)} 
                 type="button" 
-                className="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-all duration-200"
+                className="group relative w-full rounded-xl bg-gradient-to-b from-white to-gray-100 dark:from-gray-700 dark:to-gray-800 px-4 py-3 text-sm font-bold text-gray-800 dark:text-white shadow-sm border border-gray-200 dark:border-gray-600 border-b-4 active:border-b-0 active:translate-y-1 transition-all"
               >
-                <span>🔍 查看商家编号</span>
+                <div className="flex items-center justify-center gap-2">
+                  <span>🔍</span>
+                  <span>查看商家编号</span>
+                </div>
               </button>
 
-              {/* 按钮 2：前往一站式 (保持原有的红色系) */}
+              {/* 按钮 2：前往一站式 (保持红色但增加立体感，保持风格统一) */}
               <button 
                 onClick={() => window.open('https://login.1zs.top/')} 
                 type="button" 
-                className="group flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 transition-all duration-200" 
+                className="group relative w-full rounded-xl bg-gradient-to-b from-red-500 to-red-600 px-4 py-3 text-sm font-bold text-white shadow-sm border border-red-600 border-b-4 active:border-b-0 active:translate-y-1 transition-all" 
               >
-                <span>🚀 前往一站式</span>
+                <div className="flex items-center justify-center gap-2">
+                  <span>🚀</span>
+                  <span>前往一站式</span>
+                </div>
               </button>
 
-            </div>
           </div>
         </div>
       </WidgetContainer>
