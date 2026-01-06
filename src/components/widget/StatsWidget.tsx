@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { WidgetContainer } from './WidgetContainer'
 
 // 硬编码的商家编号
-const SHOP_CODE = "PRO-001A"
+const SHOP_CODE = "PRO-0000"
 
 export const StatsWidget = ({ data }: { data: BlogStats }) => {
   const [showModal, setShowModal] = useState(false)
@@ -51,11 +51,11 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-80"></div>
 
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10">
-            <span className="text-xl">🏷️</span>
+            <span className="text-xl">😀</span>
           </div>
 
           <h3 className="text-lg font-bold text-white mb-1 tracking-wide">
-            商家编号
+            当前商家编号
           </h3>
           <p className="text-xs text-gray-400 mb-5">
             点击下方卡片复制编号
@@ -69,7 +69,7 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
               {SHOP_CODE}
             </span>
             <div className={`absolute inset-0 flex items-center justify-center rounded-xl bg-blue-600 transition-all duration-200 ${isCopied ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-              <span className="text-xs font-bold text-white">已复制 ✅</span>
+              <span className="text-xs font-bold text-white">已复制√</span>
             </div>
           </div>
 
@@ -105,7 +105,7 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
           {/* 上半部分：标题区域 */}
           <div className="flex-1 flex flex-col items-center justify-center">
              <h2 className="text-2xl font-black text-white tracking-widest drop-shadow-lg">
-               查看商家编号
+               PRO+寄售平台
              </h2>
           </div>
 
@@ -118,7 +118,7 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
                 type="button" 
                 className="w-full py-2.5 rounded-xl bg-white text-black text-xs font-bold shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:bg-gray-100 hover:scale-[1.02] active:scale-95 transition-all duration-200"
               >
-                查看商家编号
+                商家编号
               </button>
 
               {/* 按钮 2：前往一站式 */}
