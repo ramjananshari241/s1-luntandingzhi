@@ -123,7 +123,7 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
                 className="group/btn relative w-full h-8 sm:h-10 rounded-lg sm:rounded-xl overflow-hidden
                   bg-white text-black text-[10px] sm:text-xs font-black tracking-widest transition-all active:scale-95"
               >
-                <span className="relative z-10">👑 会员价格</span>
+                <span className="relative z-10">👑 加入会员</span>
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-black/10 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0"></div>
               </button>
 
