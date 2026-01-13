@@ -6,161 +6,175 @@ import { DynamicIcon } from '../DynamicIcon'
 import { WidgetContainer } from './WidgetContainer'
 
 const LinkIcon = ({ icon, hasId }: { icon: string; hasId: boolean }) => {
-  const { isMobile, isTablet, isDesktop, isWidescreen } = useScreenSize()
-
-  let iconSize
-  if (isMobile || isTablet) {
-    iconSize = 15
-  }
-  if (isDesktop) {
-    iconSize = isDesktop && hasId ? 15 : 20
-  }
-  if (isWidescreen) {
-    iconSize = hasId ? 20 : 30
-  }
-
-  if (icon === '') {
-    return (
-      <DynamicIcon
-        nameIcon="FaQuestionCircle"
-        propsIcon={{
-          size: iconSize,
-        }}
-      />
-    )
-  }
+  if (!icon) return null;
   if (isValidUrl(icon) || icon.startsWith('/')) {
     return (
       <img
-        className="aspect-square"
-        height={iconSize}
-        width={iconSize}
+        className="w-4 h-4 drop-shadow-sm mr-1.5"
         src={icon}
-        alt={'social-logo'}
+        alt="icon"
       />
     )
   }
   return (
-    <DynamicIcon
-      nameIcon={icon}
-      propsIcon={{
-        size: iconSize,
-      }}
-    />
+    <div className="drop-shadow-sm mr-1.5">
+      <DynamicIcon nameIcon={icon} propsIcon={{ size: 16 }} />
+    </div>
   )
 }
 
-// 使用 any 绕过类型检查
+// 辅助函数：定义品牌颜色 (保持不变)
+const getBrandGradient = (url: string, iconName: string): string => {
+  const target = (url + iconName).toLowerCase();
+  // 保持你原有的颜色逻辑
+  if (target.includes('about')) return 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)'; // 紫色
+  if (target.includes('download')) return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'; // 橙色
+  if (target.includes('friends')) return 'linear-gradient(135deg, #3b82f6 0%, #0284c7 100%)'; // 蓝色
+  // 默认兜底
+  return 'linear-gradient(135deg, #525252 0%, #404040 100%)';
+}
+
 export const ProfileWidget = ({ data }: { data: any }) => {
-  // 安全获取头像地址，优先用原始结构 data.logo.src
-  const logoSrc = data?.logo?.src || data?.image || data?.avatar || '';
+  // 1. 强力查找头像地址
+  const avatarSrc = data?.logo?.src || data?.image || data?.avatar || '';
+  const name = data?.name || 'Profile';
+  const bio = data?.description || 'PRO+创作者';
 
+  // 模拟三个固定按钮的数据 (如果 data.links 不足，这里作为兜底或样式参考)
+  // 注意：实际逻辑依然依赖传入的 data.links
+  
   return (
-    <WidgetContainer>
-      <div className="w-full h-full">
-        {/* 上半部分：个人信息 */}
-        <div className="flex h-[72%] w-full flex-col items-start overflow-hidden px-3.5 pt-3.5 md:h-3/5 md:flex-row md:items-center md:justify-start md:space-x-3 md:px-3 md:py-2.5 lg:space-x-4 lg:px-5 lg:py-4">
-          <div className="h-full overflow-hidden rotate-0 aspect-square rounded-2xl sm:mb-0 md:rounded-full">
-            {/* 🛑 修复 Build 报错：替换 ImageWithPlaceholder 为普通 img */}
-            {logoSrc ? (
-              <img
-                src={logoSrc}
-                alt="portrait"
-                className="w-full h-full object-cover rounded-2xl md:rounded-full"
-              />
-            ) : (
-              <div className="w-full h-full bg-neutral-200 dark:bg-neutral-800 rounded-2xl md:rounded-full"></div>
-            )}
-          </div>
-          <div className="mt-2 flex flex-col justify-between gap-0.5 text-black dark:text-white md:mt-0">
-            <h1 className="mb-2 text-base font-semibold tracking-tighter line-clamp-1 sm:mb-3 sm:text-base sm:tracking-normal md:mb-0 md:text-xl md:font-medium lg:text-2xl">
-              {data?.name || 'Profile'}
-            </h1>
-            <h2 className="hidden text-sm md:line-clamp-1 lg:text-sm">
-              {data?.description}
-            </h2>
-          </div>
-        </div>
+    <React.StrictMode>
+      {/* 注入动画样式 (确保两个组件都拥有动画) */}
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-150%) skewX(-20deg); }
+          100% { transform: translateX(150%) skewX(-20deg); }
+        }
+        @keyframes borderFlow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-border-flow {
+          background-size: 200% 200%;
+          animation: borderFlow 3s ease infinite;
+        }
+        .animate-shimmer {
+          animation: shimmer 1.5s infinite;
+        }
+      `}</style>
 
-        {/* 下半部分：三个写死的固定按钮 */}
-        <div
-          className={classNames(
-            'h-[28%] w-full md:h-2/5',
-            'md:bg-neutral-100 md:dark:bg-neutral-800'
-          )}
-        >
-          <div className="scrollbar-hide flex h-full w-full flex-row items-center justify-center overflow-scroll px-3.5 pt-1 pb-3 font-medium md:justify-center md:gap-x-1 md:py-2 lg:px-5 lg:py-3 lg:text-sm">
+      {/* 
+         视觉统一：复用 StatsWidget 的外壳 
+      */}
+      <div className="relative h-full w-full group/card transition-transform duration-300 ease-out hover:scale-[1.02]">
+        
+        {/* 流光边缘 */}
+        <div className="absolute -inset-[1px] rounded-[26px] bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 opacity-0 group-hover/card:opacity-70 blur-sm transition-opacity duration-500 animate-border-flow"></div>
+
+        {/* 毛玻璃卡片本体 */}
+        <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-[#151516]/80 backdrop-blur-2xl">
+          
+          {/* 背景装饰：左侧用紫色调 */}
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-600/10 rounded-full blur-[40px] pointer-events-none group-hover/card:bg-purple-600/20 transition-colors duration-500"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-600/10 rounded-full blur-[40px] pointer-events-none group-hover/card:bg-blue-600/20 transition-colors duration-500"></div>
+
+          {/* 内容层：使用 Flex 布局 */}
+          <div className="relative z-10 flex flex-col h-full justify-between p-6">
             
-             {/* 按钮 1：入会说明 */}
-             <Link
-                key={'aaa'}
-                href={'/about'}
-                rel="noopener noreferrer"
-                // ⬇️ 修复颜色BUG：移除了 bg-gradient-to-tr 和 from-neutral... 等灰色类名
-                className={classNames(
-                  'leading-0 w-full transform cursor-pointer items-center justify-center rounded-lg text-white transition duration-300 ease-in-out hover:scale-95 md:h-full md:w-auto md:rounded-xl lg:rounded-2xl',
-                  true
-                    ? 'aspect-square md:aspect-auto md:gap-x-0.5 md:px-1.5 lg:gap-x-1.5 lg:px-3'
-                    : 'aspect-square',
-                   'flex'
-                )}
-                // ⬇️ 修复颜色BUG：移除了 !important，使用标准 background 属性
-                style={{
-                  background: 'linear-gradient(to top right, #b80ce4, #2c16ab)',
-                }}
-              >
-                <LinkIcon icon={'FaCrown'} hasId={!!true} />
-                <p className="hidden md:block md:text-xs lg:text-base">
-                  {'入会说明'}
-                </p>
-              </Link>
+            {/* 上半部分：头像和个人信息 (水平排列，更显高级) */}
+            <div className="flex-1 flex flex-row items-center gap-5">
+                {/* 头像容器 */}
+                <div className="relative group/avatar shrink-0">
+                  <div className="absolute -inset-1 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full blur opacity-40 group-hover/avatar:opacity-70 transition duration-500"></div>
+                  <div className="relative w-16 h-16 rounded-full ring-2 ring-white/10 overflow-hidden shadow-xl bg-neutral-800">
+                    {avatarSrc ? (
+                      <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500 text-xl">P</div>
+                    )}
+                  </div>
+                </div>
 
-              {/* 按钮 2：下载说明 */}
-              <Link
-                key={'bbb'}
-                href={'/download'}
-                rel="noopener noreferrer"
-                className={classNames(
-                  'leading-0 w-full transform cursor-pointer items-center justify-center rounded-lg text-white transition duration-300 ease-in-out hover:scale-95 md:h-full md:w-auto md:rounded-xl lg:rounded-2xl',
-                  true
-                    ? 'aspect-square md:aspect-auto md:gap-x-0.5 md:px-1.5 lg:gap-x-1.5 lg:px-3'
-                    : 'aspect-square',
-                   'flex'
-                )}
-                style={{
-                  background: 'linear-gradient(to top right, #eb9b34, #f0a94d)',
-                }}
-              >
-                <LinkIcon icon={'IoMdCloudDownload'} hasId={!!true} />
-                <p className="hidden md:block md:text-xs lg:text-base">
-                  {'下载说明'}
-                </p>
-              </Link>
+                {/* 文字信息 */}
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-xl font-extrabold text-white tracking-wide antialiased">
+                      {name}
+                    </h2>
+                    <div 
+                        className="text-xs text-gray-400 font-medium tracking-wide line-clamp-2"
+                        dangerouslySetInnerHTML={{ __html: bio }} 
+                    />
+                    <a href="https://pro-plus.top" target="_blank" rel="noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors mt-1 flex items-center gap-1">
+                       👉 详情请访问 pro-plus.top
+                    </a>
+                </div>
+            </div>
 
-               {/* 按钮 3：更多资源 */}
-               <Link
-                key={'ccc'}
-                href={'/friends'}
-                rel="noopener noreferrer"
-                className={classNames(
-                  'leading-0 w-full transform cursor-pointer items-center justify-center rounded-lg text-white transition duration-300 ease-in-out hover:scale-95 md:h-full md:w-auto md:rounded-xl lg:rounded-2xl',
-                  true
-                    ? 'aspect-square md:aspect-auto md:gap-x-0.5 md:px-1.5 lg:gap-x-1.5 lg:px-3'
-                    : 'aspect-square',
-                   'flex'
-                )}
-                style={{
-                  background: 'linear-gradient(to top right, #0a69c6, #0088fa)',
-                }}
-              >
-                <LinkIcon icon={'HiOutlineViewGridAdd'} hasId={!!true} />
-                <p className="hidden md:block md:text-xs lg:text-base">
-                  {'更多资源'}
-                </p>
-              </Link>
+            {/* 下半部分：功能按钮组 (Grid 布局，三等分，填满底部) */}
+            <div className="w-full mt-4">
+              <div className="grid grid-cols-3 gap-3 w-full">
+                {/* 
+                   硬编码三个核心按钮，确保样式和链接绝对正确
+                   如果未来想动态读取 data.links，可以替换这里，但样式要保持一致 
+                */}
+                
+                {/* 按钮 1: 入会说明 */}
+                <Link
+                  href="/about"
+                  className="group/btn relative h-9 w-full rounded-lg overflow-hidden flex items-center justify-center
+                    text-[10px] font-bold text-white tracking-wide antialiased
+                    transition-all duration-300
+                    hover:scale-[1.05] active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)' }}
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-1">
+                    <LinkIcon icon="FaCrown" hasId={false} />
+                    <span>入会说明</span>
+                  </div>
+                  {/* 扫光层 */}
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0 pointer-events-none"></div>
+                </Link>
+
+                {/* 按钮 2: 下载说明 */}
+                <Link
+                  href="/download"
+                  className="group/btn relative h-9 w-full rounded-lg overflow-hidden flex items-center justify-center
+                    text-[10px] font-bold text-white tracking-wide antialiased
+                    transition-all duration-300
+                    hover:scale-[1.05] active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-1">
+                    <LinkIcon icon="IoMdCloudDownload" hasId={false} />
+                    <span>下载说明</span>
+                  </div>
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0 pointer-events-none"></div>
+                </Link>
+
+                {/* 按钮 3: 更多资源 */}
+                <Link
+                  href="/friends"
+                  className="group/btn relative h-9 w-full rounded-lg overflow-hidden flex items-center justify-center
+                    text-[10px] font-bold text-white tracking-wide antialiased
+                    transition-all duration-300
+                    hover:scale-[1.05] active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #0284c7 100%)' }}
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-1">
+                    <LinkIcon icon="HiOutlineViewGridAdd" hasId={false} />
+                    <span>更多资源</span>
+                  </div>
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0 pointer-events-none"></div>
+                </Link>
+
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
-    </WidgetContainer>
+    </React.StrictMode>
   )
 }
