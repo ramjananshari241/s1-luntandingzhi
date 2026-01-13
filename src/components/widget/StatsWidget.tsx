@@ -31,14 +31,13 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
         <style jsx>{` @keyframes modalEnter { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } } .animate-modal-enter { animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; } `}</style>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity" onClick={() => setShowModal(false)}></div>
         <div className="relative z-10 w-full max-w-[300px] rounded-3xl animate-modal-enter bg-[#1c1c1e]/90 backdrop-blur-2xl border border-white/10 p-8 text-center shadow-2xl">
-          <h3 className="text-xl font-bold text-white mb-1 tracking-wide">商家编号</h3>
-          <p className="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">请打开网页右下角客服工具发送当前站点编号，按照指引完成注册及购买，点击复制👇</p>
+          <h3 className="text-xl font-bold text-white mb-2">商家编号</h3>
+          <p className="text-xs text-gray-400 mb-6 font-medium">点击编号复制</p>
           <div onClick={handleCopy} className="group relative cursor-pointer mb-6 p-4 bg-black/40 rounded-2xl border border-white/5 shadow-inner">
             <span className="text-2xl font-mono font-black text-white tracking-widest">{SHOP_CODE}</span>
             <div className={`absolute inset-0 flex items-center justify-center rounded-2xl bg-blue-600 transition-all ${isCopied ? 'opacity-100 visible' : 'opacity-0 invisible'}`}><span className="text-xs font-bold text-white">已复制 ✅</span></div>
           </div>
           <button className="w-full py-3 rounded-xl text-sm font-bold text-black bg-white" onClick={() => setShowModal(false)}>关闭</button>
-          <p className="mt-4 text-[10px] text-gray-500/60 font-light tracking-wide">当前服务由 PRO+ 寄售平台提供支持 · 详情请查看 <a href="https://pro-plus.top" target="_blank" rel="noreferrer" className="underline">pro-plus.top</a></p>
         </div>
       </div>,
       document.body
@@ -56,29 +55,27 @@ export const StatsWidget = ({ data }: { data: BlogStats }) => {
       {showModal && <Modal />}
 
       <div className="relative h-full w-full group/card transition-transform duration-500 ease-out hover:scale-[1.015]">
-        <div className="absolute -inset-[1px] rounded-[26px] bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 opacity-0 group-hover/card:opacity-100 blur-[2px] transition-opacity animate-border-flow"></div>
-        
-        {/* 卡片主体 */}
+        <div className="absolute -inset-[1px] rounded-[26px] bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 opacity-0 group-hover/card:opacity-70 blur-sm transition-opacity animate-border-flow"></div>
         <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-[#151516]/80 backdrop-blur-2xl flex flex-col p-6">
-          
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[80px]">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[100px]">
              <div className="relative flex items-center">
-               <h2 className="text-2xl md:text-3xl font-black text-white tracking-widest drop-shadow-lg antialiased">会员服务</h2>
-               {/* 呼吸灯 absolute 修复对齐 */}
-               <div className="absolute -right-5 top-1.5 w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.6)]"></div>
+               <h2 className="text-2xl md:text-3xl font-black text-white tracking-widest antialiased group-hover/card:text-blue-50 transition-colors">
+                 会员服务
+               </h2>
+               {/* 呼吸灯：改为 absolute 定位在右侧，不影响标题居中 */}
+               <div className="absolute -right-6 top-1.5 w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.6)]"></div>
              </div>
           </div>
 
-          {/* 按钮区域：锁定 h-10 细长感 */}
-          <div className="flex flex-col gap-3 w-full mt-4"> 
-              <button onClick={() => setShowModal(true)} className="group/btn relative w-full h-10 rounded-xl overflow-hidden bg-white text-black text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-xl">
+          <div className="flex flex-col gap-3.5 w-full mt-4"> 
+              <button onClick={() => setShowModal(true)} className="group/btn relative w-full h-11 rounded-xl overflow-hidden bg-white text-black text-sm font-bold tracking-wide transition-all hover:scale-[1.03] active:scale-95 shadow-xl">
                 <span className="relative z-10">👑 会员价格</span>
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-black/10 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0"></div>
               </button>
 
-              <button onClick={() => window.location.href = 'https://login.1zs.top/'} className="group/btn relative w-full h-10 rounded-xl overflow-hidden bg-red-600 text-white text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-xl border border-white/5">
+              <button onClick={() => window.location.href = 'https://login.1zs.top/'} className="group/btn relative w-full h-11 rounded-xl overflow-hidden bg-red-600 text-white text-sm font-bold tracking-wide transition-all hover:scale-[1.03] active:scale-95 shadow-xl border border-white/5">
                 <span className="relative z-10">前往一站式</span>
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0"></div>
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0"></div>
               </button>
           </div>
         </div>
