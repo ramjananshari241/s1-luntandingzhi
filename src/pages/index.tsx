@@ -9,6 +9,7 @@ import getBlogStats from '../lib/blog/getBlogStats'
 import { withNavFooterStaticProps } from '../lib/blog/withNavFooterStaticProps'
 import { getWidgets } from '../lib/notion/getBlogData'
 import { getLimitPosts } from '../lib/notion/getDatabase'
+import { getGlobalData } from '../lib/notion/getNotionData' // 确保引入这个
 
 import { MainPostsCollection } from '../components/section/MainPostsCollection'
 import { MorePostsCollection } from '../components/section/MorePostsCollection'
@@ -43,32 +44,31 @@ export const getStaticProps: GetStaticProps = withNavFooterStaticProps(
     const { LARGE, MEDIUM, SMALL, MORE } = CONFIG.HOME_POSTS_COUNT
     const sum = LARGE + MEDIUM + SMALL + MORE
 
-    // 1. 获取普通文章列表
+    // 1. 获取普通文章列表 (Post)
     const posts = await getLimitPosts(sum, ApiScope.Home)
     const formattedPosts = await formatPosts(posts)
 
     // 2. 获取统计数据
     const blogStats = await getBlogStats()
     
-    // 3. 获取所有 Widget 类型的页面 (原始数据)
+    // 3. 获取所有 Widget 类型的页面 (用于 Profile 等)
     const rawWidgets = await getWidgets()
 
-    // --- 🔥 核心修复逻辑开始 ---
-    // 第一步：把所有 Widget 原始数据，统一“清洗”成标准的 Post 格式
-    // 这样我们就能直接拿到 title, slug, cover, excerpt 等字段，不用手动去翻 properties
-    const allFormattedWidgets = await formatPosts(rawWidgets)
+    // --- 🔥 核心修复：从全局页面数据中查找 Page 类型的公告 ---
+    // sharedPageStaticProps.props 包含通过 getGlobalData 获取的 allNavPages
+    // Page 类型的文章通常会被归类到 allNavPages 中
+    const allPages = sharedPageStaticProps?.props?.allNavPages || []
+    
+    // 在所有 Page 中查找 slug 为 'announcement' 的页面
+    const announcementData = allPages.find((p: any) => p.slug === 'announcement')
+    // ----------------------------------------------------
 
-    // 第二步：在清洗后的数据中，精确查找 slug 为 'announcement' 的那一条
-    // 注意：这里直接对比 slug 字符串，绝对准确
-    const announcementData = allFormattedWidgets.find((p) => p.slug === 'announcement')
-    // --- 核心修复逻辑结束 ---
-
-    // 4. 执行原有的 Widget 格式化流程 (用于 Profile 等组件)
+    // 4. 执行原有的 Widget 格式化流程
     const preFormattedWidgets = await preFormatWidgets(rawWidgets)
     const formattedWidgets = await formatWidgets(preFormattedWidgets, blogStats)
 
     // 5. 将找到的公告数据注入到最终对象中
-    // 使用 as any 绕过 TS 检查
+    // 即使没找到，也传 null，防止组件报错
     ;(formattedWidgets as any).announcement = announcementData || null
 
     return {
