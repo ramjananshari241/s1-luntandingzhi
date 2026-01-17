@@ -1,8 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-// @ts-ignore
-import { createPortal } from 'react-dom'
 
 // 硬编码站长ID
 const SHOP_CODE = "PRO-001A"
@@ -12,18 +10,17 @@ export const StatsWidget = ({ data }: { data: any }) => {
   const [isCopied, setIsCopied] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  // 1. 数据解析修正
+  // 1. 数据解析
   const post = data || {};
   
-  // 📸 核心修复：直接读取 cover 字符串，不再找 .source
-  // formatPosts 处理后的 cover 就是 url 字符串
-  const coverSrc = post.cover || post.pageCover || ''; 
+  // 图片逻辑不变
+  const coverSrc = post.pageCoverThumbnail || post.pageCover || post.cover || ''; 
   
   const title = post.title || '暂无公告';
   const summary = post.summary || post.excerpt || '暂无详细内容...';
   
-  // 🔗 链接修复：确保 slug 存在
-  const slug = post.slug;
+  // 🛑 核心修复：因为 Notion 类型改为 Page，所以路径直接是 /slug
+  const slug = post.slug ? `/${post.slug}` : null;
 
   useEffect(() => {
     setMounted(true)
@@ -47,8 +44,7 @@ export const StatsWidget = ({ data }: { data: any }) => {
   // --- 弹窗组件 ---
   const Modal = () => {
     if (!mounted) return null
-    // @ts-ignore
-    return createPortal(
+    return (
       <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         <style jsx>{`
           @keyframes modalEnter { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
@@ -65,26 +61,17 @@ export const StatsWidget = ({ data }: { data: any }) => {
           </div>
           <button className="mt-5 w-full py-2 rounded-lg bg-white text-black text-xs font-bold hover:bg-gray-200 transition-colors" onClick={() => setShowModal(false)}>关闭</button>
         </div>
-      </div>,
-      document.body
+      </div>
     )
   }
 
-  // --- 内部内容组件 (复用) ---
-  const CardContent = () => (
-    <>
-      <div className="mb-2 flex items-center gap-1.5 opacity-90">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-          <span className="text-[10px] font-bold text-white/80 tracking-widest uppercase">公告</span>
-      </div>
-      <h2 className="text-xl md:text-2xl font-extrabold text-white leading-tight tracking-tight mb-2 group-hover/text:text-purple-300 transition-colors line-clamp-2">
-          {title}
-      </h2>
-      <p className="text-xs text-gray-300/90 font-medium line-clamp-2 leading-relaxed">
-          {summary}
-      </p>
-    </>
-  );
+  // --- 动态渲染标签 ---
+  // @ts-ignore
+  const Wrapper = slug ? Link : 'div';
+  // @ts-ignore
+  const wrapperProps = slug 
+    ? { href: slug, className: "flex-1 flex flex-col justify-center group/text cursor-pointer relative z-20" } 
+    : { className: "flex-1 flex flex-col justify-center relative z-20 opacity-80" };
 
   return (
     <React.StrictMode>
@@ -99,7 +86,6 @@ export const StatsWidget = ({ data }: { data: any }) => {
         <div className="absolute -inset-[1px] rounded-[26px] bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 opacity-0 group-hover/card:opacity-70 blur-sm transition-opacity duration-500 animate-border-flow"></div>
         <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-[#151516] flex flex-col">
           
-          {/* 背景图层 */}
           <div className="absolute inset-0 z-0">
             {coverSrc ? (
               <img 
@@ -117,19 +103,20 @@ export const StatsWidget = ({ data }: { data: any }) => {
 
           <div className="relative z-10 flex flex-col h-full justify-between p-5 md:p-6">
             
-            {/* 上半部分：公告内容 */}
-            {/* 🛑 修复跳转逻辑：显式使用 Link 或 div，不再使用动态组件，避免 Hydration 错误 */}
-            {slug ? (
-              <Link href={`/post/${slug}`} className="flex-1 flex flex-col justify-center group/text cursor-pointer relative z-20">
-                <CardContent />
-              </Link>
-            ) : (
-              <div className="flex-1 flex flex-col justify-center relative z-20 opacity-80 cursor-default">
-                <CardContent />
-              </div>
-            )}
+            {/* @ts-ignore */}
+            <Wrapper {...wrapperProps}>
+               <div className="mb-2 flex items-center gap-1.5 opacity-90">
+                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                 <span className="text-[10px] font-bold text-white/80 tracking-widest uppercase">公告</span>
+               </div>
+               <h2 className="text-xl md:text-2xl font-extrabold text-white leading-tight tracking-tight mb-2 group-hover/text:text-purple-300 transition-colors line-clamp-2">
+                 {title}
+               </h2>
+               <p className="text-xs text-gray-300/90 font-medium line-clamp-2 leading-relaxed">
+                 {summary}
+               </p>
+            </Wrapper>
 
-            {/* 下半部分：站长 ID 按钮 */}
             <div className="w-full mt-4 relative z-20">
               <button 
                 onClick={(e) => {
