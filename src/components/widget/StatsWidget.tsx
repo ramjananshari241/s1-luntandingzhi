@@ -74,10 +74,10 @@ export const StatsWidget = ({ data }: { data: any }) => {
             </div>
 
             <h3 className="text-lg font-bold text-white mb-2 tracking-wide">
-              PRO ID
+              站长认证✅
             </h3>
             <p className="text-xs text-gray-400 mb-6 font-medium leading-relaxed">
-              点击下方一键复制，您可以通过网页右下角在线客服发送ID用于验证或举报
+              您可以通过网页右下角在线客服发送ID用于验证或举报
             </p>
             
             {/* 编号显示区 */}
