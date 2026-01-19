@@ -88,13 +88,13 @@ export const EncryptedCallout = ({ block, children }: { block: any; children: an
       <div className="relative z-10 py-10 px-6 flex flex-col items-center justify-center text-center select-none">
         
         <h3 className="font-extrabold text-2xl mb-3 text-neutral-900 dark:text-white">
-          {hasPassword ? '受保护的内容' : '敏感内容折叠'}
+          {hasPassword ? '受保护的内容' : '敏感内容'}
         </h3>
         
         <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6 max-w-xs leading-relaxed">
           {hasPassword 
             ? '该区域包含加密内容，请输入密码解锁。' 
-            : '该区域可能包含敏感内容或大尺寸媒体，点击下方按钮展开。'}
+            : '该区域可能包含敏感内容。'}
         </p>
         
         <div className="w-full max-w-sm flex flex-col sm:flex-row gap-3 items-stretch justify-center">
