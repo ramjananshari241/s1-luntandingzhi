@@ -16,8 +16,7 @@ export default async function handler(req, res) {
     const posts = response.results.map((page) => {
       const p = page.properties;
       
-      // 提取分类和标签
-      const catName = p.category?.select?.name || p.Category?.select?.name;
+      const catName = p.category?.select?.name || '';
       if (catName) categories.add(catName);
       
       const tagNames = p.tags?.multi_select?.map(t => t.name) || [];
@@ -25,27 +24,18 @@ export default async function handler(req, res) {
 
       return {
         id: page.id,
-        // 核心字段
-        title: p.title?.title?.[0]?.plain_text || p.Page?.title?.[0]?.plain_text || '无标题',
+        title: p.title?.title?.[0]?.plain_text || '无标题',
         slug: p.slug?.rich_text?.[0]?.plain_text || '',
-        
-        // 元数据
-        category: catName || '',
+        category: catName,
         tags: tagNames.join(','),
-        
-        // 状态 (已发布/草稿)
-        status: p.status?.select?.name || p.status?.status?.name || 'Published',
-        
-        // 日期
+        // 兼容 Status 和 Select 两种读取方式
+        status: p.status?.status?.name || p.status?.select?.name || 'Published',
         date: p.date?.date?.start || '',
         
-        // 封面
-        cover: p.cover?.file?.url || p.cover?.external?.url || '',
+        // ✅ 关键修复：优先读取 URL 类型的封面
+        cover: p.cover?.url || p.cover?.file?.url || p.cover?.external?.url || '',
 
-        // ✅✅✅【关键修复】必须返回 type 字段！
-        // 前端默认只显示 type 为 'Post' 的内容。
-        // 如果 Notion 里没填 type，我们默认它就是 'Post'，保证能显示出来。
-        type: p.type?.select?.name || p.Type?.select?.name || 'Post' 
+        type: p.type?.select?.name || 'Post' 
       };
     });
 
