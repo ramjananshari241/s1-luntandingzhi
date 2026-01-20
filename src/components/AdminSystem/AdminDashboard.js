@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-// --- 1. 图标库 ---
+// ==========================================
+// 1. 图标库 (完整版)
+// ==========================================
 const Icons = {
   Search: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
   CoverMode: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>,
@@ -18,7 +20,9 @@ const Icons = {
   Settings: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
 };
 
-// --- 2. 样式表 ---
+// ==========================================
+// 2. 样式表 (内置防止 Global CSS 报错)
+// ==========================================
 const GlobalStyle = () => (
   <style dangerouslySetInnerHTML={{__html: `
     body { background-color: #303030; color: #ffffff; margin: 0; font-family: system-ui, sans-serif; overflow-x: hidden; }
@@ -91,6 +95,64 @@ const GlobalStyle = () => (
   `}} />
 );
 
+// ==========================================
+// 3. 辅助组件 (这是之前报错缺失的部分！)
+// ==========================================
+
+// ✅ 之前缺少的 SearchInput 组件
+const SearchInput = ({ value, onChange }) => (
+  <div className="group">
+    <svg className="search-icon" aria-hidden="true" viewBox="0 0 24 24"><g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g></svg>
+    <input placeholder="Search" type="search" className="input" value={value} onChange={onChange} />
+  </div>
+);
+
+// ✅ 之前缺少的 StepAccordion 组件
+const StepAccordion = ({ step, title, isOpen, onToggle, children }) => (
+  <div>
+    <div className="acc-btn" onClick={onToggle}>
+      <div style={{fontWeight:'bold'}}><span style={{color:'greenyellow', marginRight:'10px'}}>Step {step}</span>{title}</div>
+      <div style={{transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition:'0.3s'}}><Icons.ChevronDown /></div>
+    </div>
+    <div className={`acc-content ${isOpen ? 'open' : ''}`}>{children}</div>
+  </div>
+);
+
+// ✅ 之前缺少的 AnimatedBtn 组件
+const AnimatedBtn = ({ text, onClick, style }) => (
+  <button className="animated-button" onClick={onClick} style={style}>
+    <svg viewBox="0 0 24 24" className="arr-2" xmlns="http://www.w3.org/2000/svg"><path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path></svg>
+    <span className="text">{text}</span>
+    <span className="circle"></span>
+    <svg viewBox="0 0 24 24" className="arr-1" xmlns="http://www.w3.org/2000/svg"><path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path></svg>
+  </button>
+);
+
+// ✅ 之前缺少的 SlidingNav 组件
+const SlidingNav = ({ activeIdx, onSelect }) => {
+  const icons = [Icons.FolderMode, Icons.CoverMode, Icons.TextMode, Icons.GridMode];
+  return (
+    <div className="nav-container">
+      <div className="nav-glider" style={{ left: `${activeIdx * 45 + 5}px`, width: '40px' }} />
+      {icons.map((Icon, i) => (<div key={i} className={`nav-item ${activeIdx === i ? 'active' : ''}`} onClick={() => onSelect(i)}><Icon /></div>))}
+    </div>
+  );
+};
+
+// ✅ 之前缺少的 FullScreenLoader 组件
+const FullScreenLoader = () => (
+  <div className="loader-overlay">
+    <div className="loader">
+      <svg viewBox="0 0 200 60" width="200" height="60">
+        <path className="dash" fill="none" stroke="greenyellow" strokeWidth="3" d="M20,50 L20,10 L50,10 C65,10 65,30 50,30 L20,30" />
+        <path className="dash" fill="none" stroke="greenyellow" strokeWidth="3" d="M80,50 L80,10 L110,10 C125,10 125,30 110,30 L80,30 M100,30 L120,50" />
+        <path className="dash" fill="none" stroke="greenyellow" strokeWidth="3" d="M140,30 A20,20 0 1,0 180,30 A20,20 0 1,0 140,30" />
+      </svg>
+    </div>
+    <div className="loader-text">SYSTEM PROCESSING</div>
+  </div>
+);
+
 // 工具函数
 const cleanAndFormat = (input) => {
   if (!input) return "";
@@ -109,6 +171,7 @@ const cleanAndFormat = (input) => {
   } catch (e) { return input; }
 };
 
+// 积木编辑器
 const BlockBuilder = ({ blocks, setBlocks }) => {
   const [movingId, setMovingId] = useState(null);
   const addBlock = (type) => setBlocks([...blocks, { id: Date.now() + Math.random(), type, content: '', pwd: '' }]);
@@ -163,6 +226,7 @@ const BlockBuilder = ({ blocks, setBlocks }) => {
   );
 };
 
+// Notion 预览
 const NotionView = ({ blocks }) => (
   <div style={{color:'#e1e1e3', fontSize:'15px', lineHeight:'1.8'}}>
     {blocks?.map((b, i) => {
@@ -182,10 +246,12 @@ const NotionView = ({ blocks }) => (
   </div>
 );
 
+// --- 主组件 ---
 export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState('list'), [viewMode, setViewMode] = useState('covered'), [posts, setPosts] = useState([]), [options, setOptions] = useState({ categories: [], tags: [] }), [loading, setLoading] = useState(false), [activeTab, setActiveTab] = useState('Post'), [searchQuery, setSearchQuery] = useState(''), [showAllTags, setShowAllTags] = useState(false), [selectedFolder, setSelectedFolder] = useState(null), [previewData, setPreviewData] = useState(null);
   const [form, setForm] = useState({ title: '', slug: '', excerpt: '', content: '', category: '', tags: '', cover: '', status: 'Published', type: 'Post', date: '' }), [currentId, setCurrentId] = useState(null);
+  
   const [siteTitle, setSiteTitle] = useState('PROBLOG');
   const [navIdx, setNavIdx] = useState(1); 
   const [expandedStep, setExpandedStep] = useState(1);
