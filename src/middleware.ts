@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// 🔐 核心修复：Body 设为 null，符合 Next.js 13 Edge Runtime 规范
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // 虽然 config.matcher 做了限制，这里再做一次双重检查会更安全
+  // 1. 拦截逻辑
   if (pathname.startsWith('/admin')) {
     const basicAuth = req.headers.get('authorization')
 
     if (basicAuth) {
       const authValue = basicAuth.split(' ')[1]
-      // 解码 Base64
       const [user, pwd] = atob(authValue).split(':')
 
-      // 读取 Vercel 环境变量 (加 || '' 防止 TS 报错 undefined)
+      // 建议去 Vercel 后台设置 AUTH_USER 和 AUTH_PASS
       const validUser = process.env.AUTH_USER || 'admin'
       const validPass = process.env.AUTH_PASS || '123456'
 
@@ -22,7 +22,7 @@ export function middleware(req: NextRequest) {
       }
     }
 
-    // 验证失败：返回 401 状态码，Body 设置为 null
+    // 2. 验证失败：Body 必须是 null！
     return new NextResponse(null, {
       status: 401,
       headers: {
@@ -31,10 +31,11 @@ export function middleware(req: NextRequest) {
     })
   }
 
+  // 3. 放行其他页面
   return NextResponse.next()
 }
 
-// ✅ 关键配置：只拦截 /admin 下的所有路径
 export const config = {
-  matcher: '/admin/:path*',
+  // 匹配所有 /admin 开头的路径
+  matcher: ['/admin/:path*', '/admin'],
 }
