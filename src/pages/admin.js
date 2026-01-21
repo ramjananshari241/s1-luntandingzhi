@@ -1,9 +1,9 @@
 import React from 'react'
 import dynamic from 'next/dynamic'
 
-// ✅ 关键修改：这里全部改成小写 adminsystem
+// ✅ 恢复为原来的大写路径 AdminSystem
 const AdminComponent = dynamic(
-  () => import('../components/adminsystem/AdminDashboard'),
+  () => import('../components/AdminSystem/AdminDashboard'),
   { ssr: false }
 )
 
