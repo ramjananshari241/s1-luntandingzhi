@@ -1,7 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-// 图标库
+// ==========================================
+// 1. 图标库
+// ==========================================
 const Icons = {
   Search: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
   CoverMode: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>,
@@ -21,7 +23,9 @@ const Icons = {
   Refresh: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
 };
 
-// 样式与辅助组件
+// ==========================================
+// 2. 样式表 & 辅助组件
+// ==========================================
 const GlobalStyle = () => (
   <style dangerouslySetInnerHTML={{__html: `
     body { background-color: #303030; color: #ffffff; margin: 0; font-family: system-ui, sans-serif; overflow-x: hidden; }
@@ -166,7 +170,7 @@ const cleanAndFormat = (input) => {
 };
 
 // ==========================================
-// 4. 积木编辑器
+// 4. 积木编辑器 (核心修复：状态机解析)
 // ==========================================
 const parseContentToBlocks = (md) => {
   if(!md) return [];
@@ -193,7 +197,7 @@ const parseContentToBlocks = (md) => {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // A. :::lock
+    // A. 识别 :::lock (新建时)
     if (!isLocking && trimmed.startsWith(':::lock')) {
       flushBuffer(); isLocking = true;
       lockPwd = trimmed.replace(':::lock', '').replace(/[>*\s🔒]/g, '').trim();
@@ -207,7 +211,7 @@ const parseContentToBlocks = (md) => {
       continue;
     }
 
-    // B. > 🔒 (Notion 返回格式)
+    // B. 识别 Notion 原生 > 🔒 (重点修复)
     if (!isLocking && trimmed.match(/^>\s*🔒/)) {
       flushBuffer(); isLocking = true;
       const match = trimmed.match(/LOCK:(.*?)\*\*/);
@@ -215,29 +219,33 @@ const parseContentToBlocks = (md) => {
       continue;
     }
     
-    // C. 结束 Lock 模式检测
-    if (isLocking && !trimmed.startsWith('>') && !trimmed.startsWith(':::') && trimmed !== '') {
-       isLocking = false;
-       const joinedLock = lockBuffer.join('\n').trim();
-       res.push({ id: Date.now() + Math.random(), type: 'lock', pwd: lockPwd, content: joinedLock });
-       lockBuffer = [];
-       i--; 
-       continue;
-    }
-
+    // 结束条件：只要不处于锁定模式，或者非引用行
     if (isLocking) {
-      let contentLine = line;
-      // 移除 Notion 引用符号
-      if (contentLine.startsWith('> ')) contentLine = contentLine.substring(2);
-      else if (contentLine.startsWith('>')) contentLine = contentLine.substring(1);
-      
-      if (contentLine.trim() === '---') continue;
-      if (contentLine.trim() === '') continue;
+        // 如果遇到空行或者不以 > 开头，认为 Lock 结束
+        // 注意：NotionToMarkdown 转换的 callout 内容通常每行都带 >
+        if (!trimmed.startsWith('>') && trimmed !== '') {
+           isLocking = false;
+           const joinedLock = lockBuffer.join('\n').trim();
+           res.push({ id: Date.now() + Math.random(), type: 'lock', pwd: lockPwd, content: joinedLock });
+           lockBuffer = [];
+           i--; // 回退，重新处理当前行
+           continue;
+        }
 
-      lockBuffer.push(contentLine);
-      continue;
+        let contentLine = line;
+        // 去除 Notion 引用符号
+        if (contentLine.startsWith('> ')) contentLine = contentLine.substring(2);
+        else if (contentLine.startsWith('>')) contentLine = contentLine.substring(1);
+        
+        if (contentLine.trim() === '---') continue; // 忽略分隔符
+        // 忽略空行(可选，看需求，这里为了干净忽略)
+        if (contentLine.trim() === '') continue;
+
+        lockBuffer.push(contentLine);
+        continue;
     }
 
+    // 普通块
     if (trimmed.startsWith('# ')) { flushBuffer(); res.push({ id: Date.now() + Math.random(), type: 'h1', content: trimmed.replace('# ', '') }); continue; }
     if (!trimmed) { flushBuffer(); continue; }
     buffer.push(line);
@@ -346,30 +354,8 @@ const BlockBuilder = ({ blocks, setBlocks }) => {
   );
 };
 
-const NotionView = ({ blocks }) => {
-  if (!blocks || !Array.isArray(blocks)) return <div style={{padding:20, color:'#666'}}>暂无预览内容</div>;
-  return (
-    <div style={{color:'#e1e1e3', fontSize:'15px', lineHeight:'1.8'}}>
-      {blocks.map((b, i) => {
-        const type = b.type; const data = b[type]; const text = data?.rich_text?.[0]?.plain_text || "";
-        if(type==='heading_1') return <h1 key={i} style={{fontSize:'1.8em', borderBottom:'1px solid #333', paddingBottom:'8px', margin:'24px 0 12px'}}>{text}</h1>;
-        if(type==='paragraph') {
-            const richText = data?.rich_text?.[0];
-            if (richText?.annotations?.code) return <div key={i} style={{margin:'10px 0', borderLeft:'3px solid #ff6b6b', paddingLeft:'10px'}}><span style={{color:'#ff6b6b', fontFamily:'monospace', fontSize:'0.95em'}}>{text}</span></div>;
-            return <p key={i} style={{margin:'10px 0', minHeight:'1em'}}>{text}</p>;
-        }
-        if(type==='divider') return <hr key={i} style={{border:'none', borderTop:'1px solid #444', margin:'24px 0'}} />;
-        if(type==='image') { const url = data?.file?.url || data?.external?.url; if (!url) return null; const isVideo = url.match(/\.(mp4|mov|webm|ogg)(\?|$)/i); if(isVideo) return <div key={i} style={{display:'flex', justifyContent:'center', margin:'20px 0'}}><div style={{width:'100%', maxHeight:'500px', borderRadius:'8px', background:'#000', display:'flex', justifyContent:'center'}}><video src={url} controls preload="metadata" style={{maxWidth:'100%', maxHeight:'100%'}} /></div></div>; return <div key={i} style={{display:'flex', justifyContent:'center', margin:'20px 0'}}><div style={{width: '100%', height: '500px', background: '#000', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden'}}><img src={url} style={{maxWidth: '100%', maxHeight: '100%', objectFit: 'contain'}} alt="" /></div></div>; }
-        if(type==='video' || type==='embed') { let url = data?.file?.url || data?.external?.url || data?.url; if(!url) return null; const isY = url.includes('youtube')||url.includes('youtu.be'); if(isY){if(url.includes('watch?v='))url=url.replace('watch?v=','embed/');if(url.includes('youtu.be/'))url=url.replace('youtu.be/','www.youtube.com/embed/');} return <div key={i} style={{display:'flex', justifyContent:'center', margin:'20px 0'}}>{(type==='embed'||isY)?<iframe src={url} style={{width:'100%',maxWidth:'800px',height:'450px',border:'none',borderRadius:'8px',background:'#000'}} allowFullScreen />:<video src={url} controls style={{width:'100%',maxHeight:'500px',borderRadius:'8px',background:'#000'}}/>}</div>; }
-        if(type==='callout') return <div key={i} style={{background:'#2d2d30', padding:'20px', borderRadius:'12px', border:'1px solid #3e3e42', display:'flex', gap:'15px', margin:'20px 0'}}><div style={{fontSize:'1.4em'}}>{b.callout.icon?.emoji || '🔒'}</div><div style={{flex:1}}><div style={{fontWeight:'bold', color:'greenyellow', marginBottom:'4px'}}>{text}</div><div style={{fontSize:'12px', opacity:0.5}}>[ 加密内容已受保护 ]</div></div></div>;
-        return null;
-      })}
-    </div>
-  );
-};
-
 // ==========================================
-// 5. 主组件
+// 5. 顶层入口组件
 // ==========================================
 export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
@@ -413,22 +399,44 @@ export default function AdminDashboard() {
 
   const handleEdit = async (id) => {
     setLoading(true);
-    const r = await fetch(`/api/admin/post?id=${id}`);
-    const d = await r.json();
-    if (d.success) {
-      setForm(d.post);
-      setEditorBlocks(parseContentToBlocks(d.post.content));
-      setCurrentId(id);
-      setView('edit');
+    try {
+        const r = await fetch(`/api/admin/post?id=${id}`);
+        if (!r.ok) throw new Error(`API Error: ${r.status}`);
+        
+        const d = await r.json();
+        if (d.success && d.post) {
+          setForm(d.post);
+          setEditorBlocks(parseContentToBlocks(d.post.content || ''));
+          setCurrentId(id);
+          setView('edit');
+        } else {
+          alert(`加载失败: ${d.error || '未知错误'}`);
+        }
+    } catch(e) { 
+        alert("网络请求错误: " + e.message); 
+    } finally { 
+        setLoading(false); 
     }
-    setLoading(false);
   };
 
+  // ✅ 修复：handlePreview 使用 e.stopPropagation
+  const handlePreview = async (p) => {
+    setLoading(true);
+    try {
+        const r = await fetch(`/api/admin/post?id=${p.id}`);
+        if (!r.ok) throw new Error(`API Error: ${r.status}`);
+        const d = await r.json();
+        if (d.success && d.post) {
+            setPreviewData(d.post);
+        } else {
+            alert('预览失败: ' + (d.error || '无数据'));
+        }
+    } catch(e) { } finally { setLoading(false); }
+  };
+  
   const handleCreate = () => { setForm({ title: '', slug: 'p-'+Date.now().toString(36), excerpt:'', content:'', category:'', tags:'', cover:'', status:'Published', type: 'Post', date: new Date().toISOString().split('T')[0] }); setEditorBlocks([]); setCurrentId(null); setView('edit'); setExpandedStep(1); };
   
-  // ✅ 修复：在 handleSave 里加入 e.stopPropagation
-  const handleSave = async (e) => {
-    if(e) e.stopPropagation(); // 防止冒泡
+  const handleSave = async () => {
     if (isDeploying) return alert("请等待上一次更新完成（约60秒）...");
     setLoading(true);
     const fullContent = editorBlocks.map(b => {
