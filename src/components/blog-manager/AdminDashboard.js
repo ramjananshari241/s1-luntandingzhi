@@ -87,7 +87,7 @@ const GlobalStyle = () => (
     .input:active { transform: scale(0.95); }
     .input:focus { box-shadow: 0 0 0 2.5px #2f303d; }
     .search-icon { position: absolute; left: 1rem; fill: #bdbecb; width: 1rem; height: 1rem; pointer-events: none; z-index: 1; }
-    /* 🟢 修复：底部距离改为 120px，避开客服组件 */
+    /* 🟢 修复悬浮按钮位置 */
     .fab-scroll { position: fixed; right: 30px; bottom: 120px; display: flex; flex-direction: column; gap: 10px; z-index: 99; }
     .fab-btn { width: 45px; height: 45px; background: greenyellow; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; transition: 0.2s; }
     .fab-btn:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(173, 255, 47, 0.4); }
@@ -288,12 +288,16 @@ const NotionView = ({ blocks }) => {
 };
 
 // ==========================================
-// 5. 主页面组件
+// 5. 主组件
 // ==========================================
 export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState('list');
+  
+  // ✅ 核心修复：补全缺失的 viewMode 状态
+  const [viewMode, setViewMode] = useState('covered');
+  
   const [posts, setPosts] = useState([]);
   const [options, setOptions] = useState({ categories: [], tags: [] });
   const [activeTab, setActiveTab] = useState('Post');
@@ -321,43 +325,19 @@ export default function AdminDashboard() {
     setLoading(true); 
     try { 
        const r = await fetch('/api/admin/posts');
+       if (!r.ok) throw new Error(`API Error: ${r.status}`);
+       const d = await r.json(); 
+       if (d.success) { setPosts(d.posts || []); setOptions(d.options || { categories: [], tags: [] }); }
        
-       // 🛡️ 防崩层 1: 检查 HTTP 状态
-       if (!r.ok) {
-         console.error("API Error Status:", r.status);
-         // 如果 API 挂了，我们不崩页面，只是停止加载
-         setLoading(false);
-         return; 
+       const rConf = await fetch('/api/admin/config');
+       if (rConf.ok) {
+           const dConf = await rConf.json(); 
+           if (dConf.success && dConf.siteInfo) setSiteTitle(dConf.siteInfo.title);
        }
-
-       // 🛡️ 防崩层 2: 尝试解析 JSON
-       let d;
-       try {
-         d = await r.json();
-       } catch (jsonErr) {
-         console.error("API 返回的不是 JSON:", jsonErr);
-         return;
-       }
-
-       if (d.success) { 
-         setPosts(d.posts || []); 
-         setOptions(d.options || { categories: [], tags: [] }); 
-       }
-       
-       // 获取 Config (独立错误处理)
-       try {
-         const rConf = await fetch('/api/admin/config');
-         if(rConf.ok) {
-            const dConf = await rConf.json(); 
-            if (dConf.success && dConf.siteInfo) setSiteTitle(dConf.siteInfo.title);
-         }
-       } catch(e) {}
-
-    } catch(e) { 
-       console.warn("Fetch Error:", e);
-    } 
+    } catch(e) { console.warn(e); } 
     finally { setLoading(false); } 
   }
+  useEffect(() => { if (mounted) fetchPosts(); }, [mounted]);
 
   // 后退逻辑
   useEffect(() => {
@@ -370,6 +350,23 @@ export default function AdminDashboard() {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, [view]);
+
+  const updateSiteTitle = async () => {
+    const newTitle = prompt("请输入新的网站标题:", siteTitle);
+    if (newTitle && newTitle !== siteTitle) {
+        setLoading(true); await fetch('/api/admin/config', { method: 'POST', body: JSON.stringify({ title: newTitle }) });
+        setSiteTitle(newTitle); setLoading(false);
+    }
+  };
+
+  const deleteTagOption = (e, tagToDelete) => {
+    e.stopPropagation();
+    const currentTags = form.tags ? form.tags.split(',').filter(t => t.trim()) : [];
+    const newTags = currentTags.filter(t => t.trim() !== tagToDelete).join(',');
+    setForm({ ...form, tags: newTags });
+  };
+
+  const handleNavClick = (idx) => { setNavIdx(idx); const modes = ['folder','covered','text','gallery']; setViewMode(modes[idx]); setSelectedFolder(null); };
 
   // 🟢 核心修复：智能解析器 (兼容 Notion 原生 Markdown)
   const parseContentToBlocks = (md) => {
@@ -411,16 +408,14 @@ export default function AdminDashboard() {
       }
 
       // B. Notion 返回的 Markdown 语法 > 🔒 (增强正则)
-      // 匹配 > 🔒 **LOCK:密码** 或 > 🔒 LOCK:密码
       if (!isLocking && trimmed.match(/^>\s*🔒\s*(\*\*)?LOCK:(.*?)(\*\*)?/)) {
         flushBuffer(); isLocking = true;
-        // 提取密码
         const match = trimmed.match(/LOCK:(.*?)(\*|$)/);
         lockPwd = match ? match[1].trim() : '';
         continue;
       }
       
-      // C. 结束条件：非引用行且非空行 -> 结束录制
+      // C. 结束条件
       if (isLocking && !trimmed.startsWith('>') && !trimmed.startsWith(':::') && trimmed !== '') {
          isLocking = false;
          const joinedLock = lockBuffer.join('\n').trim();
@@ -432,7 +427,6 @@ export default function AdminDashboard() {
 
       if (isLocking) {
         let contentLine = line;
-        // 清洗 Notion 引用前缀
         if (contentLine.startsWith('> ')) contentLine = contentLine.substring(2);
         else if (contentLine.startsWith('>')) contentLine = contentLine.substring(1);
         if (contentLine.trim() === '---') continue;
@@ -446,7 +440,6 @@ export default function AdminDashboard() {
       buffer.push(line);
     }
     
-    // 收尾
     if (isLocking) {
         const joinedLock = lockBuffer.join('\n').trim();
         res.push({ id: Date.now() + Math.random(), type: 'lock', pwd: lockPwd, content: joinedLock });
@@ -497,20 +490,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const updateSiteTitle = async () => {
-    const newTitle = prompt("请输入新的网站标题:", siteTitle);
-    if (newTitle && newTitle !== siteTitle) {
-        setLoading(true); await fetch('/api/admin/config', { method: 'POST', body: JSON.stringify({ title: newTitle }) });
-        setSiteTitle(newTitle); setLoading(false);
-    }
-  };
-
-  const triggerDeploy = async () => {
-    setIsDeploying(true);
-    try { await fetch('/api/admin/deploy'); } catch(e) {}
-    setTimeout(() => setIsDeploying(false), 60000);
-  };
-
   const handleManualDeploy = async () => {
      if (isDeploying) return;
      if(confirm('确定要立即更新Blog吗？\n点击确定将立刻开始更新，在完成内容更新前请不要重复提交更新请求！')) {
@@ -518,15 +497,12 @@ export default function AdminDashboard() {
         alert('已触发更新！请耐心等待约 1 分钟。');
      }
   };
-
-  const deleteTagOption = (e, tagToDelete) => {
-    e.stopPropagation();
-    const currentTags = form.tags ? form.tags.split(',').filter(t => t.trim()) : [];
-    const newTags = currentTags.filter(t => t.trim() !== tagToDelete).join(',');
-    setForm({ ...form, tags: newTags });
+  
+  const triggerDeploy = async () => {
+    setIsDeploying(true);
+    try { await fetch('/api/admin/deploy'); } catch(e) {}
+    setTimeout(() => setIsDeploying(false), 60000);
   };
-
-  const handleNavClick = (idx) => { setNavIdx(idx); const modes = ['folder','covered','text','gallery']; setViewMode(modes[idx]); setSelectedFolder(null); };
 
   const getFilteredPosts = () => {
      let list = posts.filter(p => {
@@ -564,7 +540,6 @@ export default function AdminDashboard() {
            </div>
            
            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-             {/* 🟢 修复：更新按钮只显示图标 */}
              <button onClick={handleManualDeploy} style={{background:'#424242', border: isDeploying ? '1px solid #555' : '1px solid greenyellow', opacity: isDeploying ? 0.5 : 1, padding:'10px', borderRadius:'8px', color: isDeploying ? '#888' : 'greenyellow', cursor: isDeploying ? 'not-allowed' : 'pointer'}} title="立即更新博客前端">
                <Icons.Refresh />
              </button>
