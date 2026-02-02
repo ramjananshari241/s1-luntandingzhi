@@ -10,6 +10,7 @@ import { ThemeProvider } from 'next-themes'
 import Head from 'next/head'
 import { event, GoogleAnalytics } from 'nextjs-google-analytics'
 import NextNprogress from 'nextjs-progressbar'
+import Script from 'next/script' // 1. 引入 Next.js 脚本组件
 import { useEffect } from 'react'
 import { NextPageWithLayout } from '../types/blog'
 
@@ -33,7 +34,67 @@ function BlogApp({ Component, pageProps, router }: AppPropsWithLayout) {
 
   return (
     <>
-      <script src="//code.jivosite.com/widget/rvgI8rzgYJ" async></script>
+      {/* 2. 替换 Jivo 为 Chatwoot 增强版逻辑 */}
+      <Script id="chatwoot-setup" strategy="afterInteractive">
+        {`
+          (function(d,t) {
+            var BASE_URL = "https://chat.pro-pl.us";
+            var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+            g.src = BASE_URL + "/packs/js/sdk.js";
+            g.defer = true;
+            g.async = true;
+            s.parentNode.insertBefore(g, s);
+
+            window.chatwootSettings = {
+              position: 'right',
+              type: 'expanded_bubble',
+              launcherTitle: '购买说明',
+              // 监听消息：实现丝滑提醒逻辑
+              onMessage: function(message) {
+                if (message.message_type === 1) {
+                  // A. 播放声音
+                  var audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+                  audio.play().catch(function(e) { console.log("等待交互后开启声音") });
+
+                  // B. 手机震动
+                  if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
+
+                  // C. 窗口抖动
+                  var container = d.getElementById('chatwoot-widget-container');
+                  if (container) {
+                    container.style.transition = "transform 0.1s";
+                    var count = 0;
+                    var interval = setInterval(function() {
+                      container.style.transform = (count % 2) ? "translateX(-15px)" : "translateX(15px)";
+                      if (++count > 12) {
+                        clearInterval(interval);
+                        container.style.transform = "translateX(0)";
+                      }
+                    }, 80);
+                  }
+
+                  // D. 标题闪烁
+                  var oldTitle = d.title;
+                  var blink = true;
+                  var timer = setInterval(function() {
+                    d.title = blink ? "【新回复】" + oldTitle : oldTitle;
+                    blink = !blink;
+                  }, 1000);
+                  d.addEventListener('click', function() { clearInterval(timer); d.title = oldTitle; }, { once: true });
+                }
+              }
+            };
+
+            g.onload = function() {
+              window.chatwootSDK.run({
+                websiteToken: 'SGwpXTTn9T7jhVsvudTEy1tV',
+                baseUrl: BASE_URL
+              })
+            }
+          })(document,"script");
+        `}
+      </Script>
+
      <ThemeProvider attribute="class">
       <Head>
         <meta
@@ -70,8 +131,6 @@ function BlogApp({ Component, pageProps, router }: AppPropsWithLayout) {
       <Analytics />
     </ThemeProvider>
     </>
-   
-
   )
 }
 
