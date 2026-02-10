@@ -7,20 +7,23 @@ export default async function handler(req, res) {
   try {
     let allResults = [];
     let hasMore = true;
-    let startCursor = undefined;
+    let cursor = undefined;
 
-    // 🔄 循环抓取所有数据 (解决数据遗失问题)
+    // 🟢 核心修复：全量递归抓取逻辑
     while (hasMore) {
       const response = await notion.databases.query({
         database_id: databaseId,
+        start_cursor: cursor,
+        page_size: 100, // 每次抓取最大上限
         sorts: [{ property: 'date', direction: 'descending' }],
-        start_cursor: startCursor,
-        page_size: 100, // 每次抓取最大数量
       });
 
-      allResults = [...allResults, ...response.results];
+      allResults.push(...response.results);
       hasMore = response.has_more;
-      startCursor = response.next_cursor;
+      cursor = response.next_cursor;
+      
+      // 安全阀：如果数据量极其庞大（比如超过500条），Vercel 可能会超时。
+      // 对于一般的博客管理，100-500条可以一次性加载。
     }
 
     const categories = new Set();
@@ -36,16 +39,13 @@ export default async function handler(req, res) {
       const tagNames = tagList.map(t => t.name);
       tagNames.forEach(t => tags.add(t));
 
-      // 宽容度处理：Slug 缺失时回退到 ID
-      const slugVal = p.slug?.rich_text?.[0]?.plain_text || p.Slug?.rich_text?.[0]?.plain_text || page.id;
-
       return {
         id: page.id,
         title: p.title?.title?.[0]?.plain_text || p.Page?.title?.[0]?.plain_text || '无标题',
-        slug: slugVal,
+        slug: p.slug?.rich_text?.[0]?.plain_text || p.Slug?.rich_text?.[0]?.plain_text || '',
         category: catName,
         tags: tagNames.join(','),
-        status: p.status?.select?.name || p.status?.status?.name || 'Published',
+        status: p.status?.status?.name || p.status?.select?.name || 'Published',
         type: p.type?.select?.name || p.Type?.select?.name || 'Post',
         date: p.date?.date?.start || p.Date?.date?.start || '',
         cover: p.cover?.url || p.cover?.file?.url || p.cover?.external?.url || ''
