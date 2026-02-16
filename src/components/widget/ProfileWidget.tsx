@@ -90,7 +90,7 @@ export const ProfileWidget = ({ data }: { data: any }) => {
                   <div className="relative z-10 flex items-center justify-center">
                     <LinkIcon icon="HiOutlineViewGridAdd" />
                     {/* ✨ 修改点：同上 */}
-                    <span className="hidden md:inline leading-none">更多精彩</span>
+                    <span className="hidden md:inline leading-none">更多内容</span>
                   </div>
                   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer z-0 pointer-events-none"></div>
                 </Link>
