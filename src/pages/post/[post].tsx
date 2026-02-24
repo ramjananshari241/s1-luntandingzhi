@@ -20,17 +20,25 @@ import { NextPageWithLayout, PartialPost, Post, SharedNavFooterStaticProps } fro
 import { ApiScope, BlockResponse } from '../../types/notion'
 
 export const getStaticPaths = async () => {
-  // 全量生成核心
   const postsRaw = await getPosts(ApiScope.Archive)
   const formattedPosts = await formatPosts(postsRaw)
-  const paths = formattedPosts.map((post) => ({
-    params: { post: post.slug },
-  }))
-  return { paths, fallback: 'blocking' }
+  
+  // 🟢 极速部署核心：限制最多只预渲染最新的 100 篇文章
+  // 部署时间将被死死封印在 100 篇的工作量内，绝不会再超时
+  const paths = formattedPosts
+    .slice(0, 100)
+    .map((post) => ({
+      params: { post: post.slug },
+    }))
+
+  return { 
+    paths, 
+    // 🟢 必须是 'blocking'。这样第 101 篇老文章被点击时，才会现场即时生成。
+    fallback: 'blocking' 
+  }
 }
 
 export const getStaticProps: GetStaticProps = withNavFooterStaticProps(
-  // 🟢 核心修复：在这里加上 : Promise<any>，强制让 TypeScript 闭嘴
   async (context: GetStaticPropsContext, sharedPageStaticProps: SharedNavFooterStaticProps): Promise<any> => {
     const slug = context.params?.post as string
 
@@ -52,6 +60,7 @@ export const getStaticProps: GetStaticProps = withNavFooterStaticProps(
       const blocks = await getAllBlocks(post.id)
       const formattedBlocks = await formatBlocks(blocks)
 
+      // 🛡️ JSON 暴力清洗：杜绝 undefined 导致的 500 报错
       const safeData = JSON.parse(JSON.stringify({
         ...sharedPageStaticProps.props,
         post,
@@ -70,6 +79,7 @@ export const getStaticProps: GetStaticProps = withNavFooterStaticProps(
         props: safeData,
       }
     } catch (error) {
+      console.error("🛡️ Render Error Bypass:", error)
       return { notFound: true }
     }
   }
