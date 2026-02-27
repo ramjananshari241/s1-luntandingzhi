@@ -33,75 +33,75 @@ export const StatsWidget = ({ data }: { data: any }) => {
     return () => { document.body.style.overflow = 'unset' }
   }, [showModal])
 
-  // --- 弹窗组件 (🟢 仅重构弹窗内部，保留外层遮罩和动画) ---
+  // --- 弹窗组件 (🟢 极简、物理3D按键、高级日式贩售机风格) ---
   const Modal = () => {
     if (!mounted) return null
     // @ts-ignore
     return createPortal(
       <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         <style jsx>{`
-          @keyframes modalEnter { 
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); } 
-            100% { opacity: 1; transform: scale(1) translateY(0); } 
+          @keyframes modalFade {
+            0% { opacity: 0; backdrop-filter: blur(0px); }
+            100% { opacity: 1; backdrop-filter: blur(8px); }
           }
-          .animate-modal-enter { animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          @keyframes cardPop {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
+          .animate-modal-bg { animation: modalFade 0.3s ease forwards; }
+          .animate-card-pop { animation: cardPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          
+          /* 🟢 纯正的物理 3D 按钮样式 */
+          .btn-3d {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #ffffff;
+            background-color: #007aff;
+            border-radius: 14px;
+            /* 使用纯色硬阴影制造物理厚度感 */
+            box-shadow: 0 6px 0 #004d9e, 0 15px 25px rgba(0, 122, 255, 0.25);
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-decoration: none;
+          }
+          /* 按下时的物理回弹反馈 */
+          .btn-3d:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #004d9e, 0 5px 10px rgba(0, 122, 255, 0.2);
+          }
         `}</style>
 
-        {/* 遮罩 */}
+        {/* 遮罩：点击空白处依然可以关闭 */}
         <div 
-          className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+          className="absolute inset-0 bg-black/70 animate-modal-bg cursor-pointer"
           onClick={() => setShowModal(false)}
         ></div>
         
-        {/* 弹窗主体 */}
-        <div className="relative z-10 w-full max-w-[320px] overflow-hidden rounded-2xl animate-modal-enter
-          bg-[#1c1c1e] border border-white/10 shadow-2xl"
-        >
-          {/* 顶部微光装饰 */}
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+        {/* 弹窗主体：纯粹、无多余元素的深色磨砂卡片 */}
+        <div className="relative z-10 w-full max-w-[260px] rounded-3xl animate-card-pop bg-[#1a1a1c] shadow-2xl border border-white/5 p-8 flex flex-col items-center">
+          
+          {/* 极简提示 */}
+          <h3 className="text-xs font-bold text-white/50 mb-8 tracking-[0.3em] uppercase">
+            Official Vending
+          </h3>
 
-          <div className="p-8 text-center flex flex-col items-center">
-            {/* 图标 */}
-            <div className="mb-4 w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-              <span className="text-xl">🛒</span>
-            </div>
+          {/* 唯一的入口：3D 立体蓝色按钮 */}
+          <a
+            href={BUY_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-3d"
+            onClick={() => setShowModal(false)}
+          >
+            立即前往
+          </a>
 
-            <h3 className="text-lg font-bold text-white mb-4 tracking-wide">
-              购买说明
-            </h3>
-            
-            {/* 🟢 购买说明文本区 */}
-            <div className="text-left w-full mb-6 p-4 bg-black/40 rounded-xl border border-white/5 shadow-inner">
-              <p className="text-xs text-gray-300 font-medium leading-relaxed mb-2">
-                <span className="text-purple-400 mr-1">1.</span>点击下方按钮跳转至官方自助贩售机。
-              </p>
-              <p className="text-xs text-gray-300 font-medium leading-relaxed mb-2">
-                <span className="text-purple-400 mr-1">2.</span>选择您需要的商品并完成支付。
-              </p>
-              <p className="text-xs text-gray-300 font-medium leading-relaxed">
-                <span className="text-purple-400 mr-1">3.</span>支付成功后，系统将自动发货，请注意保存凭证。如有问题请联系右下角客服。
-              </p>
-            </div>
-
-            {/* 🟢 真正的前往购买按钮 */}
-            <a
-              href={BUY_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 mb-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold tracking-wide hover:from-purple-500 hover:to-blue-500 transition-all hover:scale-[1.02] active:scale-95 shadow-lg flex items-center justify-center gap-2"
-            >
-              <span>🚀</span> 立即前往购买
-            </a>
-
-            {/* 取消/关闭按钮 */}
-            <button
-              type="button"
-              className="w-full py-2.5 rounded-xl bg-white/5 text-gray-300 text-xs font-bold tracking-wide hover:bg-white/10 hover:text-white transition-colors"
-              onClick={() => setShowModal(false)}
-            >
-              暂不购买
-            </button>
-          </div>
         </div>
       </div>,
       document.body
@@ -141,7 +141,7 @@ export const StatsWidget = ({ data }: { data: any }) => {
              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
           </div>
 
-          {/* ================= 内容层 (保留公告部分不动) ================= */}
+          {/* ================= 内容层 (保留原样不动) ================= */}
           <div className="relative z-10 flex flex-col h-full justify-between p-5 md:p-6">
             
             {/* 上半部分：公告内容 */}
@@ -161,7 +161,7 @@ export const StatsWidget = ({ data }: { data: any }) => {
                </p>
             </Wrapper>
 
-            {/* 🟢 下半部分：触发弹窗的入口按钮 */}
+            {/* 下半部分：触发弹窗的入口按钮 */}
             <div className="w-full mt-4 relative z-20">
               <button 
                 onClick={(e) => {
