@@ -4,18 +4,17 @@ import Link from 'next/link'
 // @ts-ignore
 import { createPortal } from 'react-dom'
 
-// 硬编码站长ID
-const SHOP_CODE = "PRO-0000"
+// 🟢 你的自定义购买地址（请在这里修改为你真实的贩售机链接）
+const BUY_LINK = "https://your-custom-buy-link.com"
 
 export const StatsWidget = ({ data }: { data: any }) => {
   const [showModal, setShowModal] = useState(false)
-  const [isCopied, setIsCopied] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  // 1. 数据解析
+  // 1. 数据解析 (保持原样不动)
   const post = data || {};
   
-  // 🚫 彻底移除图片逻辑，只使用纯色背景
+  // 🚫 彻底移除图片逻辑，只使用纯色背景 (保持原样不动)
   
   const title = post.title || '暂无公告';
   const summary = post.summary || post.excerpt || '暂无详细内容...';
@@ -23,13 +22,7 @@ export const StatsWidget = ({ data }: { data: any }) => {
 
   useEffect(() => {
     setMounted(true)
-  }, [])
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(SHOP_CODE)
-    setIsCopied(true)
-    setTimeout(() => setIsCopied(false), 2000)
-  }
+  },[])
 
   useEffect(() => {
     if (showModal) {
@@ -40,7 +33,7 @@ export const StatsWidget = ({ data }: { data: any }) => {
     return () => { document.body.style.overflow = 'unset' }
   }, [showModal])
 
-  // --- 弹窗组件 ---
+  // --- 弹窗组件 (🟢 仅重构弹窗内部，保留外层遮罩和动画) ---
   const Modal = () => {
     if (!mounted) return null
     // @ts-ignore
@@ -60,56 +53,53 @@ export const StatsWidget = ({ data }: { data: any }) => {
           onClick={() => setShowModal(false)}
         ></div>
         
-        {/* 弹窗主体：保持高级但干净 */}
-        <div className="relative z-10 w-full max-w-[300px] overflow-hidden rounded-2xl animate-modal-enter
+        {/* 弹窗主体 */}
+        <div className="relative z-10 w-full max-w-[320px] overflow-hidden rounded-2xl animate-modal-enter
           bg-[#1c1c1e] border border-white/10 shadow-2xl"
         >
-          {/* 顶部微光装饰，保留一点点质感 */}
+          {/* 顶部微光装饰 */}
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
 
           <div className="p-8 text-center flex flex-col items-center">
             {/* 图标 */}
             <div className="mb-4 w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-              <span className="text-xl">🆔</span>
+              <span className="text-xl">🛒</span>
             </div>
 
-            <h3 className="text-lg font-bold text-white mb-2 tracking-wide">
-              已认证✅
+            <h3 className="text-lg font-bold text-white mb-4 tracking-wide">
+              购买说明
             </h3>
-            <p className="text-xs text-gray-400 mb-6 font-medium leading-relaxed">
-              您可以通过网页右下角在线客服发送ID用于验证或举报
-            </p>
             
-            {/* 编号显示区 */}
-            <div 
-              onClick={handleCopy}
-              className="group relative w-full cursor-pointer mb-6 p-4 bg-black/40 rounded-xl border border-white/5 
-                transition-all duration-200 active:scale-95"
-            >
-              <div className="text-center">
-                <span className="text-xl font-mono font-bold text-gray-200 tracking-wider group-hover:text-white transition-colors">
-                  {SHOP_CODE}
-                </span>
-              </div>
-              
-              {/* 复制反馈 */}
-              <div className={`
-                absolute inset-0 flex items-center justify-center rounded-xl 
-                bg-blue-600 transition-all duration-200 
-                ${isCopied ? 'opacity-100 visible' : 'opacity-0 invisible'}
-              `}>
-                <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                  复制成功 ✅
-                </span>
-              </div>
+            {/* 🟢 购买说明文本区 */}
+            <div className="text-left w-full mb-6 p-4 bg-black/40 rounded-xl border border-white/5 shadow-inner">
+              <p className="text-xs text-gray-300 font-medium leading-relaxed mb-2">
+                <span className="text-purple-400 mr-1">1.</span>点击下方按钮跳转至官方自助贩售机。
+              </p>
+              <p className="text-xs text-gray-300 font-medium leading-relaxed mb-2">
+                <span className="text-purple-400 mr-1">2.</span>选择您需要的商品并完成支付。
+              </p>
+              <p className="text-xs text-gray-300 font-medium leading-relaxed">
+                <span className="text-purple-400 mr-1">3.</span>支付成功后，系统将自动发货，请注意保存凭证。如有问题请联系右下角客服。
+              </p>
             </div>
 
+            {/* 🟢 真正的前往购买按钮 */}
+            <a
+              href={BUY_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 mb-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold tracking-wide hover:from-purple-500 hover:to-blue-500 transition-all hover:scale-[1.02] active:scale-95 shadow-lg flex items-center justify-center gap-2"
+            >
+              <span>🚀</span> 立即前往购买
+            </a>
+
+            {/* 取消/关闭按钮 */}
             <button
               type="button"
-              className="w-full py-2.5 rounded-lg bg-white text-black text-xs font-bold tracking-wide hover:bg-gray-200 transition-colors"
+              className="w-full py-2.5 rounded-xl bg-white/5 text-gray-300 text-xs font-bold tracking-wide hover:bg-white/10 hover:text-white transition-colors"
               onClick={() => setShowModal(false)}
             >
-              关闭
+              暂不购买
             </button>
           </div>
         </div>
@@ -118,7 +108,7 @@ export const StatsWidget = ({ data }: { data: any }) => {
     )
   }
 
-  // --- 动态渲染标签 ---
+  // --- 动态渲染标签 (保持原样不动) ---
   // @ts-ignore
   const Wrapper = slug ? Link : 'div';
   // @ts-ignore
@@ -137,28 +127,21 @@ export const StatsWidget = ({ data }: { data: any }) => {
 
       <div className="relative h-full w-full group/card transition-transform duration-500 ease-out hover:scale-[1.015]">
         
-        {/* 流光边缘 (保留，这是组件风格统一的关键) */}
+        {/* 流光边缘 (保留原样不动) */}
         <div className="absolute -inset-[1px] rounded-[26px] bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 opacity-0 group-hover/card:opacity-70 blur-sm transition-opacity duration-500 animate-border-flow"></div>
 
-        {/* 主体容器 */}
+        {/* 主体容器 (保留原样不动) */}
         <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-[#151516] flex flex-col">
           
-          {/* ================= 背景图层 (纯净版) ================= */}
+          {/* ================= 背景图层 (保留原样不动) ================= */}
           <div className="absolute inset-0 z-0">
-             {/* 
-                回归最简单的深靛蓝到紫色的渐变 
-                去掉了所有的纹理叠加、噪点滤镜和复杂光斑
-             */}
              <div className="w-full h-full bg-gradient-to-br from-indigo-900 to-purple-900">
-                 {/* 只保留一个极淡的右上角光晕，增加一点点体积感，不花哨 */}
                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-[40px]"></div>
              </div>
-             
-             {/* 底部黑色渐变，确保文字清晰 */}
              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
           </div>
 
-          {/* ================= 内容层 ================= */}
+          {/* ================= 内容层 (保留公告部分不动) ================= */}
           <div className="relative z-10 flex flex-col h-full justify-between p-5 md:p-6">
             
             {/* 上半部分：公告内容 */}
@@ -178,7 +161,7 @@ export const StatsWidget = ({ data }: { data: any }) => {
                </p>
             </Wrapper>
 
-            {/* 下半部分：站长 ID 按钮 */}
+            {/* 🟢 下半部分：触发弹窗的入口按钮 */}
             <div className="w-full mt-4 relative z-20">
               <button 
                 onClick={(e) => {
@@ -193,8 +176,8 @@ export const StatsWidget = ({ data }: { data: any }) => {
                   transition-all duration-300
                   hover:bg-white/20 hover:scale-[1.02] active:scale-95 active:bg-white/5"
               >
-                <span className="text-sm">🆔</span>
-                <span>站长 ID</span>
+                <span className="text-sm">🛒</span>
+                <span>前往贩售机</span>
               </button>
             </div>
 
