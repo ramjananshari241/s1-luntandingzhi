@@ -42,7 +42,7 @@ interface BlogConfig {
     STOP_DATE: string
   }
   // 转载提示
-  REPOST_MESSAGE?: [
+  REPOST_MESSAGE?:[
     {
       // 当匹配到此链接显示转载提示 Icon
       URL: string
@@ -76,8 +76,11 @@ interface BlogConfig {
 }
 
 const CONFIG: BlogConfig = {
-  NOTION_PAGE_ID:
-    process.env.NOTION_PAGE_ID ?? '303de8e9973c81efaf8dec45a0721893',
+  // 🟢 核心改造：彻底移除硬编码的旧 ID。
+  // 现在它会优先读取 NOTION_PAGE_ID，如果没有，就读 NOTION_DATABASE_ID。
+  // 只要你在 Vercel 填了其中任意一个，前端和后台就能完美共享同一个数据库！
+  NOTION_PAGE_ID: process.env.NOTION_PAGE_ID || process.env.NOTION_DATABASE_ID || '',
+  
   NOTION_SITE_NAME: 'anzifan',
   NEXT_REVALIDATE_SECONDS: 60,
   FORCE_UPDATE_TIME: 1620000000000,
@@ -111,7 +114,7 @@ const CONFIG: BlogConfig = {
     POST_URL: 'https://anzifan-old.vercel.app/post',
     STOP_DATE: '2022-05-07',
   },
-  REPOST_MESSAGE: [
+  REPOST_MESSAGE:[
     {
       URL: 'sspai.com',
       NAME: '少数派',
