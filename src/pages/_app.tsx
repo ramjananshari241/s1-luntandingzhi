@@ -48,7 +48,7 @@ function BlogApp({ Component, pageProps, router }: AppPropsWithLayout) {
             window.chatwootSettings = {
               position: 'right',
               type: 'expanded_bubble',
-              launcherTitle: '购买说明',
+              launcherTitle: '在线客服',
               // 监听消息：实现丝滑提醒逻辑
               onMessage: function(message) {
                 if (message.message_type === 1) {
