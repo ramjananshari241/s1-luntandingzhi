@@ -49,32 +49,57 @@ const formatPost = async (post: PageObjectResponse): Promise<Post> => {
     (cover.type === 'url' && cover.url) || CONFIG.DEFAULT_POST_COVER
   const postCoverDarkSrc =
     (cover_dark.type === 'url' && cover_dark.url) || postCoverLightSrc
-  const {
-    width: widthLight,
-    height: heightLight,
-    placeholder: placeholderLight,
-  } = await getImageInfo(postCoverLightSrc)
-  const {
-    width: widthDark,
-    height: heightDark,
-    placeholder: placeholderDark,
-  } = await getImageInfo(postCoverDarkSrc)
+
+  // =========================================================
+  // 🛡️ 核心修复：媒体死链保护 (Try-Catch)
+  // =========================================================
+  
+  // 默认占位数据，防止 getImageInfo 报错
+  const defaultImgInfo = { width: 1200, height: 630, placeholder: '' }
+
+  let infoLight = defaultImgInfo
+  let infoDark = defaultImgInfo
+
+  // 1. 尝试抓取浅色封面信息
+  try {
+    if (postCoverLightSrc) {
+      infoLight = await getImageInfo(postCoverLightSrc)
+    }
+  } catch (e) {
+    console.warn(`⚠️ 无法获取浅色封面尺寸 (死链或超时): ${postCoverLightSrc}`)
+  }
+
+  // 2. 尝试抓取深色封面信息
+  try {
+    if (postCoverDarkSrc) {
+      if (postCoverDarkSrc === postCoverLightSrc) {
+        infoDark = infoLight
+      } else {
+        infoDark = await getImageInfo(postCoverDarkSrc)
+      }
+    }
+  } catch (e) {
+    console.warn(`⚠️ 无法获取深色封面尺寸 (死链或超时): ${postCoverDarkSrc}`)
+  }
+
   const postCoverLight = {
     src: postCoverLightSrc,
     info: {
-      placeholder: placeholderLight,
-      width: widthLight,
-      height: heightLight,
+      placeholder: infoLight.placeholder,
+      width: infoLight.width,
+      height: infoLight.height,
     },
   }
   const postCoverDark = {
     src: postCoverDarkSrc,
     info: {
-      placeholder: placeholderDark,
-      width: widthDark,
-      height: heightDark,
+      placeholder: infoDark.placeholder,
+      width: infoDark.width,
+      height: infoDark.height,
     },
   }
+
+  // =========================================================
 
   const postCategory = category.type === 'select' && {
     ...category.select,
